@@ -6,21 +6,17 @@ x = coord[:-1,1]
 y = coord[:-1,2]
 z = coord[:-1,3]
 
-A = np.vstack([x, y, np.ones(len(x))]).T
+a = 0
+b = 0
+c = 0
 
-result = np.linalg.lstsq(A, z, rcond=None)
+l = len(x)
+for i in range(0, l):
+    a += (y[i] - y[(i+1)%l])*(z[i] + z[(i+1)%l])
+    b += (z[i] - z[(i+1)%l])*(x[i] + x[(i+1)%l])
+    c += (x[i] - x[(i+1)%l])*(y[i] + y[(i+1)%l])
 
-n = result[0]
-
-print("This is the A matrix:")
-print(A)
-
-print("Those are the z values:")
-print(z)
-
-print("This is the result:")
-print(result)
-
+n = np.array([a, b, c])
 n = n / np.sqrt((n ** 2).sum(-1))
 a, b, c = n
 d = a * x[0] + b * y[0] + c * z[0]
@@ -30,7 +26,7 @@ print(a, b, c, d)
 
 zp = np.zeros(len(x))
 
-for i in range(0, 4):
+for i in range(0, len(x)):
     # Calculate the sigma value - sort of an error
     s = a * x[i] + b * y[i] + c * z[i] - d
     print("The sigma of point ", i, " is: ", s)
@@ -38,5 +34,9 @@ for i in range(0, 4):
     # Calculate the z' according to the plane
     zp[i] = - (a * x[i] + b * y[i] - d) / c
     print("New point is: ", x[i], y[i], zp[i], " (old Z was: ", z[i], ")")
+
+    # Calculate the sigma value - sort of an error
+    s = a * x[i] + b * y[i] + c * zp[i] - d
+    print("The sigma of point ", i, " is: ", s)
 
 np.savetxt("new_points.csv", np.array([x, y, zp]).T, fmt="%.11f", delimiter=",")
