@@ -35,8 +35,4 @@ for i in range(0, len(x)):
     zp[i] = - (a * x[i] + b * y[i] - d) / c
     print("New point is: ", x[i], y[i], zp[i], " (old Z was: ", z[i], ")")
 
-    # Calculate the sigma value - sort of an error
-    s = a * x[i] + b * y[i] + c * zp[i] - d
-    print("The sigma of point ", i, " is: ", s)
-
 np.savetxt("new_points.csv", np.array([x, y, zp]).T, fmt="%.11f", delimiter=",")
