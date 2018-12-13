@@ -1,38 +1,45 @@
 import numpy as np
 
-coord = np.loadtxt("Dachlinien.csv", delimiter=",", skiprows=1)
 
-x = coord[:-1,1]
-y = coord[:-1,2]
-z = coord[:-1,3]
 
-a = 0
-b = 0
-c = 0
+coord = np.loadtxt("DachlinienV2.csv", delimiter=",", dtype={'names': ('id', 'x', 'y', 'z'), 'formats': ('|S50', 'f', 'f', 'f')})
 
-l = len(x)
-for i in range(0, l):
-    a += (y[i] - y[(i+1)%l])*(z[i] + z[(i+1)%l])
-    b += (z[i] - z[(i+1)%l])*(x[i] + x[(i+1)%l])
-    c += (x[i] - x[(i+1)%l])*(y[i] + y[(i+1)%l])
+output = np.empty([len(coord)], dtype={'names': ('id', 'x', 'y', 'z'), 'formats': ('|S50', 'f', 'f', 'f')})
 
-n = np.array([a, b, c])
-n = n / np.sqrt((n ** 2).sum(-1))
-a, b, c = n
-d = a * x[0] + b * y[0] + c * z[0]
+polygons = {}
 
-print("This is the normal and the d coefficient")
-print(a, b, c, d)
+for i in range(0, len(coord)):
+    e = coord[i]
+    if e['id'] in polygons:
+        polygons[e['id']] = np.append(polygons[e['id']], [[e['x'], e['y'], e['z']]], axis=0)
+    else:
+        polygons[e['id']] = np.array([[e['x'], e['y'], e['z']]])
 
-zp = np.zeros(len(x))
+n = {}
 
-for i in range(0, len(x)):
-    # Calculate the sigma value - sort of an error
-    s = a * x[i] + b * y[i] + c * z[i] - d
-    print("The sigma of point ", i, " is: ", s)
+for ii, points in polygons.items():
+    n[ii] = np.array([0, 0, 0])
+    for i in range(0, len(points) - 1):
+        n[ii][0] += (points[i][1] - points[i+1][1])*(points[i][2] + points[i+1][2])
+        n[ii][1] += (points[i][2] - points[i+1][2])*(points[i][0] + points[i+1][0])
+        n[ii][2] += (points[i][0] - points[i+1][0])*(points[i][1] + points[i+1][1])
+    n[ii] = n[ii] / np.sqrt((n[ii] ** 2).sum(-1))
+
+    a, b, c = n[ii]
+    d = a * points[0][0] + b * points[0][1] + c * points[0][2]
+
+    zp = np.zeros(len(points))
+
+    x = points[:, 0]
+    y = points[:, 1]
+    z = points[:, 2]
+
+    for i in range(0, len(points)):
+        # Calculate the sigma value - sort of an error
+        s = a * x[i] + b * y[i] + c * z[i] - d
     
-    # Calculate the z' according to the plane
-    zp[i] = - (a * x[i] + b * y[i] - d) / c
-    print("New point is: ", x[i], y[i], zp[i], " (old Z was: ", z[i], ")")
+        # Calculate the z' according to the plane
+        zp[i] = - (a * x[i] + b * y[i] - d) / c
 
-np.savetxt("new_points.csv", np.array([x, y, zp]).T, fmt="%.11f", delimiter=",")
+        print(ii, ", ", x[i], ", ", y[i], ", ", zp[i])
+
