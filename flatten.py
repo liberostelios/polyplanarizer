@@ -1,8 +1,7 @@
 import numpy as np
+import sys
 
-
-
-coord = np.loadtxt("DachlinienV2.csv", delimiter=",", dtype={'names': ('id', 'x', 'y', 'z'), 'formats': ('|S50', 'f', 'f', 'f')})
+coord = np.loadtxt(sys.argv[1], delimiter=",", dtype={'names': ('id', 'x', 'y', 'z'), 'formats': ('|S50', 'f', 'f', 'f')})
 
 output = np.empty([len(coord)], dtype={'names': ('id', 'x', 'y', 'z'), 'formats': ('|S50', 'f', 'f', 'f')})
 
